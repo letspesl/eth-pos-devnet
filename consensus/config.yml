@@ -17,7 +17,7 @@ CAPELLA_FORK_EPOCH: 2
 CAPELLA_FORK_VERSION: 0x20000092
 
 # Time parameters
-SECONDS_PER_SLOT: 2
+SECONDS_PER_SLOT: 6
 SLOTS_PER_EPOCH: 5
 
 # Deposit contract
@@ -27,7 +27,7 @@ DEPOSIT_CONTRACT_ADDRESS: 0x4242424242424242424242424242424242424242
 ETH1_FOLLOW_DISTANCE: 10
 
 # EpochsPerEth1VotingPeriod defines how often the merkle root of deposit receipts get updated in beacon node on per epoch basis.
-EPOCHS_PER_ETH1_VOTING_PERIOD: 1
+EPOCHS_PER_ETH1_VOTING_PERIOD: 2
 
 # ShardCommitteePeriod is the minimum amount of epochs a validator must participate before exiting. 
 SHARD_COMMITTEE_PERIOD: 16 

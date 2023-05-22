@@ -33,7 +33,7 @@ services:
   geth:
     container_name: eth_dev_el
     image: "ethereum/client-go:v1.11.6"
-    network_mode: "host"
+    network_mode: host
     command:
       - --networkid=1234
       - --http
@@ -69,7 +69,7 @@ services:
   beacon-chain:
     container_name: eth_dev_cl
     image: "gcr.io/prysmaticlabs/prysm/beacon-chain:v4.0.4"
-    network_mode: "host"
+    network_mode: host
     command:
       - --datadir=/consensus/beacondata
       # No peers to sync with in this testnet, so setting to 0
@@ -84,7 +84,7 @@ services:
       - --chain-id=1234
       - --rpc-host=0.0.0.0
       - --grpc-gateway-host=0.0.0.0
-      - --execution-endpoint=http://geth:8551
+      - --execution-endpoint=http://0.0.0.0:8551
       - --accept-terms-of-use
       - --jwt-secret=/execution/jwtsecret
       - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
@@ -105,9 +105,9 @@ services:
   validator:
     container_name: eth_dev_validator1
     image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
-    network_mode: "host"
+    network_mode: host
     command:
-      - --beacon-rpc-provider=beacon-chain:4000
+      - --beacon-rpc-provider=0.0.0.0:4000
       - --datadir=/consensus/validatordata
       - --accept-terms-of-use
       - --interop-num-validators=64
@@ -124,9 +124,9 @@ services:
   validator2:
     container_name: eth_dev_validator2
     image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
-    network_mode: "host"
+    network_mode: host
     command:
-      - --beacon-rpc-provider=beacon-chain:4000
+      - --beacon-rpc-provider=0.0.0.0:4000
       - --datadir=/consensus/validatordata2
       - --accept-terms-of-use
       - --chain-config-file=/consensus/config.yml
