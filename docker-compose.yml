@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  #Creates a genesis state for the beacon chain using a YAML configuration file and
+  # Creates a genesis state for the beacon chain using a YAML configuration file and
   # a deterministic set of 64 validators.
   create-beacon-chain-genesis:
     image: "gcr.io/prysmaticlabs/prysm/cmd/prysmctl:latest"
@@ -19,7 +19,7 @@ services:
 
   # Sets up the genesis configuration for the go-ethereum client from a JSON file.
   geth-genesis:
-    image: "ethereum/client-go:latest"
+    image: "ethereum/client-go:v1.11.6"
     command: --datadir=/execution init /execution/genesis.json
     volumes:
       - ./execution:/execution
@@ -31,11 +31,19 @@ services:
   # Runs the go-ethereum execution client with the specified, unlocked account and necessary
   # APIs to allow for proof-of-stake consensus via Prysm.
   geth:
-    image: "ethereum/client-go:latest"
+    container_name: eth_dev_el
+    image: "ethereum/client-go:v1.11.6"
     command:
+      - --networkid=1234
       - --http
-      - --http.api=eth
+      - --http.api="eth,net,web3,miner,personal,txpool,debug,admin"
       - --http.addr=0.0.0.0
+      - --http.port=14100
+      - --http.corsdomain=*
+      - --ws
+      - --ws.port=14200 
+      - --ws.addr=0.0.0.0
+      - --port=14300
       - --authrpc.vhosts=*
       - --authrpc.addr=0.0.0.0
       - --authrpc.jwtsecret=/execution/jwtsecret
@@ -47,7 +55,7 @@ services:
       - --syncmode=full
     ports:
       - 8551:8551
-      - 8545:8545
+      - 14100:14100
     depends_on:
       geth-genesis:
         condition: service_completed_successfully
@@ -61,24 +69,29 @@ services:
   # The account used in go-ethereum is set as the suggested fee recipient for transactions
   # proposed via the validators attached to the beacon node.
   beacon-chain:
-    image: "gcr.io/prysmaticlabs/prysm/beacon-chain:latest"
+    container_name: eth_dev_cl
+    image: "gcr.io/prysmaticlabs/prysm/beacon-chain:v4.0.4"
     command:
       - --datadir=/consensus/beacondata
       # No peers to sync with in this testnet, so setting to 0
       - --min-sync-peers=0
+      # - --minimum-peers-per-subnet=0 
       - --genesis-state=/consensus/genesis.ssz
-      - --interop-eth1data-votes
+      # - --interop-eth1data-votes # dummy 세팅 설정 - deposit정보가 beacon chain 블록에 반영 안되는 문제
       - --bootstrap-node=
       # The chain configuration file used for setting up Prysm
       - --chain-config-file=/consensus/config.yml
       # We specify the chain id used by our execution client
-      - --chain-id=${CHAIN_ID:-32382}
+      - --chain-id=1234
       - --rpc-host=0.0.0.0
       - --grpc-gateway-host=0.0.0.0
       - --execution-endpoint=http://geth:8551
       - --accept-terms-of-use
       - --jwt-secret=/execution/jwtsecret
       - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
+      - --minimal-config=true # 실제 동작 확인 불가
+      - --contract-deployment-block=1 # 미설정 시 mainnet 블록 넘버를 자동으로 가져와 beacon chain에서 deposit contract의 log를 수집 안함
+      - --verbosity=debug
     depends_on:
       geth:
         condition: service_started
@@ -95,7 +108,8 @@ services:
   # We run a validator client with 64, deterministically-generated keys that match
   # The validator keys present in the beacon chain genesis state generated a few steps above.
   validator:
-    image: "gcr.io/prysmaticlabs/prysm/validator:latest"
+    container_name: eth_dev_validator1
+    image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
     command:
       - --beacon-rpc-provider=beacon-chain:4000
       - --datadir=/consensus/validatordata
@@ -103,6 +117,26 @@ services:
       - --interop-num-validators=64
       - --interop-start-index=0
       - --chain-config-file=/consensus/config.yml
+      - --minimal-config=true
+      - --verbosity=debug
+    depends_on:
+      beacon-chain:
+        condition: service_started
+    volumes:
+      - ./consensus:/consensus
+
+  validator2:
+    container_name: eth_dev_validator2
+    image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
+    command:
+      - --beacon-rpc-provider=beacon-chain:4000
+      - --datadir=/consensus/validatordata2
+      - --accept-terms-of-use
+      - --chain-config-file=/consensus/config.yml
+      - --wallet-dir=/consensus/nohdwallet2
+      - --wallet-password-file=/consensus/walletpw2.txt
+      - --minimal-config=true
+      - --verbosity=debug
     depends_on:
       beacon-chain:
         condition: service_started

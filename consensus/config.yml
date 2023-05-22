@@ -17,8 +17,20 @@ CAPELLA_FORK_EPOCH: 2
 CAPELLA_FORK_VERSION: 0x20000092
 
 # Time parameters
-SECONDS_PER_SLOT: 12
-SLOTS_PER_EPOCH: 6
+SECONDS_PER_SLOT: 2
+SLOTS_PER_EPOCH: 5
 
 # Deposit contract
 DEPOSIT_CONTRACT_ADDRESS: 0x4242424242424242424242424242424242424242
+
+# Eth1FollowDistance is the number of eth1.0 blocks to wait before considering a new deposit for voting. This only applies after the chain as been started.
+ETH1_FOLLOW_DISTANCE: 10
+
+# EpochsPerEth1VotingPeriod defines how often the merkle root of deposit receipts get updated in beacon node on per epoch basis.
+EPOCHS_PER_ETH1_VOTING_PERIOD: 1
+
+# ShardCommitteePeriod is the minimum amount of epochs a validator must participate before exiting. 
+SHARD_COMMITTEE_PERIOD: 16 
+
+# MinValidatorWithdrawabilityDelay is the shortest amount of time a validator has to wait to withdraw.
+MIN_VALIDATOR_WITHDRAWABILITY_DELAY: 16
