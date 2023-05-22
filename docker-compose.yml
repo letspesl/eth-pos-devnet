@@ -33,10 +33,11 @@ services:
   geth:
     container_name: eth_dev_el
     image: "ethereum/client-go:v1.11.6"
+    network_mode: "host"
     command:
       - --networkid=1234
       - --http
-      - --http.api="eth,net,web3,miner,personal,txpool,debug,admin"
+      - --http.api=eth,net,web3,miner,personal,txpool,debug,admin
       - --http.addr=0.0.0.0
       - --http.port=14100
       - --http.corsdomain=*
@@ -53,9 +54,6 @@ services:
       - --password=/execution/geth_password.txt
       - --nodiscover
       - --syncmode=full
-    ports:
-      - 8551:8551
-      - 14100:14100
     depends_on:
       geth-genesis:
         condition: service_completed_successfully
@@ -71,6 +69,7 @@ services:
   beacon-chain:
     container_name: eth_dev_cl
     image: "gcr.io/prysmaticlabs/prysm/beacon-chain:v4.0.4"
+    network_mode: "host"
     command:
       - --datadir=/consensus/beacondata
       # No peers to sync with in this testnet, so setting to 0
@@ -97,10 +96,6 @@ services:
         condition: service_started
       create-beacon-chain-genesis:
         condition: service_completed_successfully
-    ports:
-      - 4000:4000
-      - 3500:3500
-      - 8080:8080
     volumes:
       - ./consensus:/consensus
       - ./jwtsecret:/execution/jwtsecret
@@ -110,6 +105,7 @@ services:
   validator:
     container_name: eth_dev_validator1
     image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
+    network_mode: "host"
     command:
       - --beacon-rpc-provider=beacon-chain:4000
       - --datadir=/consensus/validatordata
@@ -128,6 +124,7 @@ services:
   validator2:
     container_name: eth_dev_validator2
     image: "gcr.io/prysmaticlabs/prysm/validator:v4.0.4"
+    network_mode: "host"
     command:
       - --beacon-rpc-provider=beacon-chain:4000
       - --datadir=/consensus/validatordata2
